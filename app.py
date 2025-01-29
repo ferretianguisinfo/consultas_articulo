@@ -347,6 +347,14 @@ def ventas(articulo):
 
 #if __name__ == '__main__':
     #app.run(debug=False)   
+@app.route('/consulta')
+def consulta():
+    url = "https://consultas-articulo.onrender.com/"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return jsonify(response.json())  # Retorna los datos obtenidos
+    return jsonify({"error": "No se pudo obtener información"}), 500
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port, debug=True)
