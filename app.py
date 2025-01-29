@@ -345,8 +345,8 @@ def ventas(articulo):
         return f"Error al intentar conectar o ejecutar la consulta: {e}"
 
 
-if __name__ == '__main__':
-    app.run(debug=False)   
 #if __name__ == '__main__':
- #   port = int(os.environ.get("PORT", 3306))
-  #  app.run(host='0.0.0.0', port=port, debug=True)
+    #app.run(debug=False)   
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 3306))
+    app.run(host='0.0.0.0', port=port, debug=True)
