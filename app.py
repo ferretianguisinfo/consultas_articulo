@@ -3,10 +3,9 @@ from flask import Flask, render_template, request, send_file, redirect
 import pyodbc
 import pandas as pd
 from io import BytesIO
-import xlsxwriter
-
 
 app = Flask(__name__)
+aplication= app
 
 # Configuración de la conexión
 server = 'SERVERINSAC5\\WINCAJASERVER'
@@ -349,10 +348,11 @@ def ventas(articulo):
         return f"Error al intentar conectar o ejecutar la consulta: {e}"
 
 
-#if __name__ == '__main__':
- #   app.run(debug=False)   
+
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 1000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(debug=True)
+#if __name__ == '__main__':
+ #   port = int(os.environ.get("PORT", 3306))
+  #  app.run(host='0.0.0.0', port=port, debug=True)
 
 
