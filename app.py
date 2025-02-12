@@ -3,6 +3,8 @@ from flask import Flask, render_template, request, send_file, redirect
 import pyodbc
 import pandas as pd
 from io import BytesIO
+import xlsxwriter
+
 
 app = Flask(__name__)
 
@@ -62,9 +64,9 @@ def index():
                 a.Subfamilia,
                 a.Nombre,
                 s.Descripcion AS SubfamiliaDescripcion,
-                p1.Precio1IVAUV,
-                p2.Precio2IVAUV,
-                p3.Precio3IVAUV,
+                CAST(p1.Precio1IVAUV AS DECIMAL(10,2)) AS Precio1IVAUV,
+                CAST(p2.Precio2IVAUV AS DECIMAL(10,2)) AS Precio2IVAUV,
+                CAST(p3.Precio3IVAUV AS DECIMAL(10,2)) AS Precio3IVAUV,
                 pn.UltimoCostoNeto,
                 c.Cantidad,
                 vt.VentaUnidadPeriodo,
@@ -154,27 +156,27 @@ def download_excel():
                 a.Subfamilia,
                 a.Nombre,
                 s.Descripcion AS SubfamiliaDescripcion,
-                p1.Precio1IVAUV,
-                p2.Precio2IVAUV,
-                p3.Precio3IVAUV,
+                CAST(p1.Precio1IVAUV AS DECIMAL(10,2)) AS Precio1IVAUV,
+                CAST(p2.Precio2IVAUV AS DECIMAL(10,2)) AS Precio2IVAUV,
+                CAST(p3.Precio3IVAUV AS DECIMAL(10,2)) AS Precio3IVAUV,
                 pn.UltimoCostoNeto,
                 c.Cantidad,
                 vt.VentaUnidadPeriodo,
                 CASE 
                     WHEN pn.UltimoCostoNeto > 0 THEN 
-                        ((p1.Precio1IVAUV - pn.UltimoCostoNeto) / pn.UltimoCostoNeto)*100
+                        CAST(((p1.Precio1IVAUV - pn.UltimoCostoNeto) / pn.UltimoCostoNeto) * 100 AS INT)
                     ELSE 
                         NULL
                 END AS PorcentajeGanancia1,
                 CASE 
                     WHEN pn.UltimoCostoNeto > 0 THEN 
-                        ((p2.Precio2IVAUV - pn.UltimoCostoNeto) / pn.UltimoCostoNeto)*100
+                        CAST(((p2.Precio2IVAUV - pn.UltimoCostoNeto) / pn.UltimoCostoNeto) * 100 AS INT)
                     ELSE 
                         NULL
                 END AS PorcentajeGanancia2,
                 CASE 
                     WHEN pn.UltimoCostoNeto > 0 THEN 
-                        ((p3.Precio3IVAUV - pn.UltimoCostoNeto) / pn.UltimoCostoNeto)*100
+                        CAST(((p3.Precio3IVAUV - pn.UltimoCostoNeto) / pn.UltimoCostoNeto) * 100 AS INT)
                     ELSE 
                         NULL
                 END AS PorcentajeGanancia3
@@ -217,7 +219,9 @@ def download_excel():
         output.seek(0)
 
         # Enviar el archivo al cliente
-        return send_file(output, as_attachment=True, download_name='articulos.xlsx', mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        return send_file(output, as_attachment=True, download_name='articulos.xlsx')
+
+
 
     except Exception as e:
         return f"Error al intentar generar el archivo Excel: {e}"
@@ -346,7 +350,9 @@ def ventas(articulo):
 
 
 #if __name__ == '__main__':
-    #app.run(debug=False)   
-
+ #   app.run(debug=False)   
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    port = int(os.environ.get("PORT", 1000))
+    app.run(host='0.0.0.0', port=port, debug=True)
+
+
