@@ -94,8 +94,8 @@
         <form method="GET" action="/" class="search-bar">
             <label for="articulo">Artículo:</label>
             <input type="text" id="articulo" name="articulo" placeholder="Buscar por artículo" value="{{ articulo }}">
-            <label for="codigo_barras">Código de Barras:</label>
-            <input type="text" id="codigo_barras" name="codigo_barras" placeholder="Buscar por código de barras" value="{{ codigo_barras }}">
+            <!--<label for="codigo_barras">Código de Barras:</label>
+            <input type="text" id="codigo_barras" name="codigo_barras" placeholder="Buscar por código de barras" value="{{ codigo_barras }}">-->
             <label for="descripcion_subfamilia">Descripción Subfamilia:</label>
             <input type="text" id="descripcion_subfamilia" name="descripcion_subfamilia" placeholder="Buscar por descripción de subfamilia" value="{{ descripcion_subfamilia }}">
             <label for="nombre">Nombre:</label>
@@ -105,13 +105,13 @@
             <label for="orden">Ordenar por:</label>
             <select id="orden" name="orden">
                 <option value="nombre" {% if orden == 'nombre' %}selected{% endif %}>Nombre</option>
-                <option value="valor" {% if orden == 'valor' %}selected{% endif %}>Valor de venta de Unidades</option>
+                <option value="valor" {% if orden == 'valor' %}selected{% endif %}>Cantidad de venta</option>
             </select>
             <button type="submit">Buscar</button>
         </form>
         <form method="GET" action="/download_excel" class="search-bar">
             <input type="hidden" name="articulo" value="{{ articulo }}">
-            <input type="hidden" name="codigo_barras" value="{{ codigo_barras }}">
+            <!--<input type="hidden" name="codigo_barras" value="{{ codigo_barras }}">-->
             <input type="hidden" name="descripcion_subfamilia" value="{{ descripcion_subfamilia }}">
             <input type="hidden" name="nombre" value="{{ nombre }}">
             <button type="submit">Descargar Excel</button>
@@ -120,7 +120,6 @@
             <thead>
                 <tr>
                     <th>SKU</th>
-                    <th>Código de Barras</th>
                     <th>Descripción Subfamilia</th>
                     <th>Nombre</th>
                     <th>Proveedores</th>
@@ -141,19 +140,18 @@
                     {% for row in rows %}
                     <tr>
                         <td>{{ row[0] }}</td>
-                        <td>{{ row[1] }}</td>
                         <td>{{ row[4] }}</td>
                         <td>{{ row[3] }}</td>
                         <td><a href="/proveedores/{{ row[0] }}">Ver Proveedor</a></td>
-                        <td>${{ row[5] }}</td>
-                        <td>{{ row[11] }}%</td>
-                        <td>${{ row[6] }}</td>
-                        <td>{{ row[12] }}%</td>
-                        <td>${{ row[7] }}</td>
-                        <td>{{ row[13] }}%</td>
+                        <td>${{ row[5] if row[5] else 0 }}</td>
+                        <td>{{ row[11] if row[11] else 0 }}%</td>
+                        <td>${{ row[6] if row[6] else 0 }}</td>
+                        <td>{{ row[12] if row[12] else 0 }}%</td>
+                        <td>${{ row[7] if row[7] else 0 }}</td>
+                        <td>{{ row[13] if row[13] else 0 }}%</td>
                         <td>${{ row[8] }}</td>
-                        <td>{{ row[9] }}<br><a href="/compras/{{ row[0] }}">Ver Precio</a></td>
-                        <td>{{ row[10] }}<br><a href="/ventas/{{ row[0] }}">Ver Detalles</a></td>   
+                        <td>{{ row[9] if row[9] else 0 }}<br><a href="/compras/{{ row[0] }}">Ver Detalles</a></td>
+                        <td>{{ row[10] if row[10] else 0 }}<br><a href="/ventas/{{ row[0] }}">Ver Detalles</a></td>
                         <td>
                             <form method="POST" action="/asignar_tarea">
                                 <input type="hidden" name="sku" value="{{ row[0] }}">
