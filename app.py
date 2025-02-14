@@ -8,7 +8,7 @@ app = Flask(__name__)
 aplication= app
 
 # Configuración de la conexión
-server = 'SERVERINSAC5\\WINCAJASERVER'
+server = 'SERVERINSAC5,1433'
 database = 'Ferretianguis'
 username = 'sa'
 password = 'Wincaja20'
