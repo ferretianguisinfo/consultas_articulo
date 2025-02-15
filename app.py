@@ -9,7 +9,7 @@ import xlsxwriter
 app = Flask(__name__)
 
 # Configuración de la conexión
-server = 'SERVERINSAC5\\WINCAJASERVER'
+server = '192.168.1.40,1433'
 database = 'Ferretianguis'
 username = 'sa'
 password = 'Wincaja20'
