@@ -3,9 +3,10 @@ from flask import Flask, render_template, request, send_file, redirect
 import pyodbc
 import pandas as pd
 from io import BytesIO
+import xlsxwriter
+
 
 app = Flask(__name__)
-aplication= app
 
 # Configuración de la conexión
 server = 'SERVERINSAC5\\WINCAJASERVER'
@@ -13,25 +14,68 @@ database = 'Ferretianguis'
 username = 'sa'
 password = 'Wincaja20'
 
-tareas = {}
 @app.route('/asignar_tarea', methods=['POST'])
 def asignar_tarea():
-    sku = request.form['sku']
+    articulo_id = request.form['articulo_id']
     tarea = request.form['tarea']
-    if sku not in tareas:
-        tareas[sku] = []
-    tareas[sku].append({'tarea': tarea, 'finalizada': False})
-    print(f"Tarea asignada al SKU {sku}: {tarea}")
-    return redirect('/')
+    
+    try:
+        # Cadena de conexión y ejecución de consulta para asignar tarea
+        connection_string = pyodbc.connect(
+            f'DRIVER={{ODBC Driver 17 for SQL Server}};'
+            f'SERVER={server};'
+            f'DATABASE={database};'
+            f'UID={username};'
+            f'PWD={password}'
+        )
 
-@app.route('/finalizar_tarea', methods=['POST'])
-def finalizar_tarea():
-    sku = request.form['sku']
-    tarea_index = int(request.form['tarea_index'])
-    if sku in tareas and 0 <= tarea_index < len(tareas[sku]):
-        tareas[sku][tarea_index]['finalizada'] = True
-        print(f"Tarea finalizada para el SKU {sku}: {tareas[sku][tarea_index]['tarea']}")
-    return redirect('/')
+        cursor = connection_string.cursor()
+        query = '''
+            UPDATE Articulos
+            SET Tareas = ?
+            WHERE Articulo = ?
+        '''
+        cursor.execute(query, tarea, articulo_id)
+        connection_string.commit()
+
+        cursor.close()
+        connection_string.close()
+        
+        return redirect('/')
+
+    except Exception as e:
+        return f"Error al asignar tarea: {e}"
+
+@app.route('/eliminar_tarea', methods=['POST'])
+def eliminar_tarea():
+    articulo_id = request.form['articulo_id']
+    
+    try:
+        # Cadena de conexión y ejecución de consulta para eliminar tarea
+        connection_string = pyodbc.connect(
+            f'DRIVER={{ODBC Driver 17 for SQL Server}};'
+            f'SERVER={server};'
+            f'DATABASE={database};'
+            f'UID={username};'
+            f'PWD={password}'
+        )
+
+        cursor = connection_string.cursor()
+        query = '''
+            UPDATE Articulos
+            SET Tareas = NULL
+            WHERE Articulo = ?
+        '''
+        cursor.execute(query, articulo_id)
+        connection_string.commit()
+
+        cursor.close()
+        connection_string.close()
+        
+        return redirect('/')
+
+    except Exception as e:
+        return f"Error al eliminar tarea: {e}"
 
 @app.route('/')
 def index():
@@ -40,6 +84,7 @@ def index():
     nombre = request.args.get('nombre', '').strip()
     codigo_barras = request.args.get('codigo_barras', '').strip()
     descripcion_subfamilia = request.args.get('descripcion_subfamilia', '').strip()
+    tareas = request.args.get('tareas', '').strip()
     orden = request.args.get('orden', 'nombre').strip()  # Captura el parámetro de orden, por defecto 'nombre'
 
     try:
@@ -52,7 +97,6 @@ def index():
             f'PWD={password}'
         )
 
-        # Crear un cursor para ejecutar las consultas
         cursor = connection_string.cursor()
 
         # Construcción de la consulta SQL
@@ -86,7 +130,8 @@ def index():
                         CAST(((p3.Precio3IVAUV - pn.UltimoCostoNeto) / pn.UltimoCostoNeto) * 100 AS INT)
                     ELSE 
                         NULL
-                END AS PorcentajeGanancia3
+                END AS PorcentajeGanancia3,
+                a.Tareas
             FROM Articulos a
             LEFT JOIN Subfamilias s ON a.Subfamilia = s.Subfamilia
             LEFT JOIN Qv4PreciosNo1 p1 ON a.Articulo = p1.Articulo AND p1.TipoTienda = '3'
@@ -111,8 +156,10 @@ def index():
         if descripcion_subfamilia:
             query += " AND s.Descripcion LIKE ?"
             params.append(f'%{descripcion_subfamilia}%')
+        if tareas:
+            query += " AND a.Tareas LIKE ?"
+            params.append(f'%{tareas}%')
 
-        # Ajustar el orden según la selección del usuario
         if orden == 'valor':
             query += " ORDER BY vt.VentaUnidadPeriodo DESC, a.Nombre ASC"
         else:
@@ -121,15 +168,15 @@ def index():
         cursor.execute(query, params)
         rows = cursor.fetchall()
 
-        # Cerrar conexiones
         cursor.close()
         connection_string.close()
 
         return render_template('index.html', rows=rows, articulo=articulo, nombre=nombre,
-                               codigo_barras=codigo_barras, descripcion_subfamilia=descripcion_subfamilia, orden=orden)
+                               codigo_barras=codigo_barras, descripcion_subfamilia=descripcion_subfamilia, tareas=tareas, orden=orden)
 
     except Exception as e:
         return f"Error al intentar conectar o ejecutar la consulta: {e}"
+
     
 @app.route('/download_excel')
 def download_excel():
@@ -348,11 +395,10 @@ def ventas(articulo):
         return f"Error al intentar conectar o ejecutar la consulta: {e}"
 
 
-
-if __name__ == '__main__':
-    app.run(debug=True)
 #if __name__ == '__main__':
- #   port = int(os.environ.get("PORT", 3306))
-  #  app.run(host='0.0.0.0', port=port, debug=True)
+ #   app.run(debug=False)   
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 1000))
+    app.run(host='0.0.0.0', port=port, debug=True)
 
 
