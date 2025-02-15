@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
     <html lang="es">
     <head>
         <meta charset="UTF-8">
@@ -49,6 +49,11 @@
             .search-bar button:hover {
                 background-color: #247ac0;
             }
+            .table-container {
+            max-height: 70vh; /* Ajusta la altura máxima de la tabla */
+            overflow-y: auto;
+            border: 1px solid #ddd; /* Para mantener un borde alrededor */
+            }
             table {
                 width: 100%;
                 border-collapse: collapse;
@@ -57,6 +62,13 @@
                 border-radius: 8px;
                 overflow: hidden;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            thead {
+            position: sticky;
+            top: 0;
+            background-color: #247ac0; /* Mantiene el color de fondo del encabezado */
+            color: white;
+            z-index: 10;
             }
             th, td {
                 text-align: left;
@@ -100,6 +112,8 @@
             <input type="text" id="descripcion_subfamilia" name="descripcion_subfamilia" placeholder="Buscar por descripción de subfamilia" value="{{ descripcion_subfamilia }}">
             <label for="nombre">Nombre:</label>
             <input type="text" id="nombre" name="nombre" placeholder="Buscar por nombre" value="{{ nombre }}">
+            <label for="tareas">Tareas:</label>
+            <input type="text" id="tareas" name="tareas" placeholder="Buscar por tarea" value="{{ tareas }}">
             <button type="submit">Filtrar</button>
 
             <label for="orden">Ordenar por:</label>
@@ -132,7 +146,9 @@
                     <th>Costo Neto</th>
                     <th>Compras</th>
                     <th>Venta de Unidades</th>
+                    <th>Ver Tarea</th>
                     <th>Asignar Tarea</th>
+                    <th>Eliminar</th>
                 </tr>
             </thead>
             <tbody>
@@ -152,39 +168,31 @@
                         <td>${{ row[8] }}</td>
                         <td>{{ row[9] if row[9] else 0 }}<br><a href="/compras/{{ row[0] }}">Ver Detalles</a></td>
                         <td>{{ row[10] if row[10] else 0 }}<br><a href="/ventas/{{ row[0] }}">Ver Detalles</a></td>
-                        <td>
-                            <form method="POST" action="/asignar_tarea">
-                                <input type="hidden" name="sku" value="{{ row[0] }}">
-                                <input type="text" name="tarea" placeholder="Escribe una tarea" required>
-                                <button type="submit">Asignar</button>
-                            </form>
-                            {% if row[0] in tareas %}
-                                <ul>
-                                    {% for index, tarea in enumerate(tareas[row[0]]) %}
-                                    <li>
-                                        {{ tarea['tarea'] }} - 
-                                        {% if tarea['finalizada'] %}
-                                            <strong>Finalizada</strong>
-                                        {% else %}
-                                            <form method="POST" action="/finalizar_tarea" style="display:inline;">
-                                                <input type="hidden" name="sku" value="{{ row[0] }}">
-                                                <input type="hidden" name="tarea_index" value="{{ index }}">
-                                                <button type="submit">Finalizar</button>
-                                            </form>
-                                        {% endif %}
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                            {% endif %}
-                        </td>    
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr>
-                        <td colspan="11" class="no-results">No se encontraron resultados</td>
-                    </tr>
-                {% endif %}
-            </tbody>        
-        </table>
-    </body>
-    </html>
+                        <td>{{ row[14] if row[14] else "No asignada" }}</td>
+
+                <!-- Formulario para asignar tarea -->
+                <td>
+                    <form method="POST" action="/asignar_tarea">
+                        <input type="hidden" name="articulo_id" value="{{ row[0] }}">
+                        <input type="text" name="tarea" placeholder="Nueva tarea" required>
+                        <button type="submit">Asignar tarea</button>
+                    </form>
+                </td>
+
+                <!-- Formulario para eliminar tarea -->
+                <td>
+                    <form method="POST" action="/eliminar_tarea">
+                        <input type="hidden" name="articulo_id" value="{{ row[0] }}">
+                        <button type="submit">Eliminar tarea</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="14" class="no-results">No se encontraron resultados</td>
+            </tr>
+        {% endif %}
+    </tbody>        
+</table>
+
